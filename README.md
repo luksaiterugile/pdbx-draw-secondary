@@ -1,6 +1,4 @@
-# pdbx-draw-secondary
-
-### Image generation from protein structures
+## Image generation from protein structures
 
 This program generates PNG format image file from a single protein structure PDBX/mmCIF format file using Shell script. Program uses here-document code block which redirects stdin into Jmol program. 
 
