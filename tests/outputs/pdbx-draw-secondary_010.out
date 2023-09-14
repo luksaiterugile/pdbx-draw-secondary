@@ -1,0 +1,1 @@
+./scripts/pdbx-draw-secondary: ERROR, file "tests/data/pdbx-draw-secondary_010/non_ascii.txt" is not an ASCII text file. Please provide ASCII text file.

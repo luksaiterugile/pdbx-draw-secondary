@@ -1,0 +1,236 @@
+#!/bin/sh
+
+##########################################################################
+
+# This program MUST read a single PDBx/mmCIF format file, SHOULD
+# depict a specified part of the chain as a wireframe model,
+# color atoms by their chemical types and highlight the hydrogen bonds
+# in secondary structures. Output produces PNG or PNM format image file.
+
+
+# Author is Rugile Luksaite
+
+
+# The specification of the program can be found in specification
+# directory, named specification.txt
+
+
+# INPUT file type: mmCIF/PDBx
+# OUTPUT file type: PNG
+
+
+# Program execution
+# pdbx-draw-secondary [SELECTION STATEMENT] [INPUT FILE] [OUTPUT FILE]
+
+# pdbx-draw-secondary [ROTATION OPTION] [ROTATION FILE] 
+# [SELECTION STATEMENT] [INPUT FILE] [OUTPUT FILE]
+
+# pdbx-draw-secondary [HELP OR VERSION OPTION]
+
+
+# OPTIONS:
+# 	-r, --rotate rotation.ras 	provide a file which has rotation commands
+#   -h, --help					displays help text
+#   -v, --version				prints version of the program
+
+
+# Examples:
+# pdbx-draw-secondary '288-317 and *:A and helix' 2C2A.cif 2C2A.png 
+
+# pdbx-draw-secondary -r rotation.ras '288-317 and *:A and helix' 
+# 2C2A.cif 2C2A.png
+
+# pdbx-draw-secondary -h
+
+# pdbx-draw-secondary -v
+
+##########################################################################
+SELECTION_STATEMENT=""
+INPUT_CIF=""
+OUTPUT_PNG=""
+ROTATION=""
+
+Id='$Id: pdbx-draw-secondary 27 2022-04-05 07:58:31Z rugile $'
+VERSION="1.1.0-dev"
+
+# Temporary file for showing Jmol errors
+TMP_FILE="jmol.stderr"
+
+# Removes image if it was previously created 
+# and had the same file name
+rm -f "${OUTPUT_PNG}"
+
+# Error 1: checks number of variables given in STDIN
+if [ $# -eq 3 ]
+then
+	SELECTION_STATEMENT="$1"
+	INPUT_CIF="$2"
+	OUTPUT_PNG="$3"
+elif [ $# -eq 5  -o $# -eq 7 ]
+then
+	case "$1" in 
+	-r | --rotation)
+		ROTATION="$2"
+		SELECTION_STATEMENT="$3"
+		INPUT_CIF="$4"
+		OUTPUT_PNG="$5"
+		ROTATION_STATEMENT=$(cat ${ROTATION})
+		;;
+	*) 
+		echo "$0: ERROR, incorrect '-r' ('--rotation') option usage. Check "\
+		"help (-h option) for more information." >&2  
+		exit 1
+		;;
+	esac
+elif [ $# -eq 1 ]
+then
+	case "$1" in 
+		-h | --help)
+			echo "This program MUST read a single PDBx/mmCIF format"\
+			"file, SHOULD depict a specified part of the chain\nas a"\
+			"wireframe model, color atoms by their chemical types"\
+			"and highlight the hydrogen bonds in secondary structures."\
+			"\nOutput MUST produce PNG or PNM format"\
+			"image file.\n"\
+			"\nFORMATS:"\
+			"\n	INPUT file type: mmCIF/PDBx"\
+			"\n	OUTPUT file type: PNG or PNM\n"\
+			"\nPROGRAM EXECUTION:"\
+			"\n	pdbx-draw-secondary [SELECTION STATEMENT] [INPUT FILE]"\
+			"[OUTPUT FILE]"\
+			"\n 	pdbx-draw-secondary [ROTATION OPTION] [ROTATION FILE]"\
+			"[SELECTION STATEMENT] [INPUT FILE] [OUTPUT FILE]"\
+			"\n  	pdbx-draw-secondary [HELP OR VERSION OPTION]"\
+			"\nOPTIONS:"\
+			"\n	-r, --rotate rotation.ras 	provide a file which has"\
+			"rotation commands"\
+			"\n 	-h, --help 			displays help text"\
+			"\n 	-v, --version 			prints version of the program\n"\
+			"\nEXAMPLES:"\
+			"\n	pdbx-draw-secondary '288-317 and *:A and helix'"\
+			"2C2A.cif 2C2A.png"\
+			"\n	pdbx-draw-secondary -r rotation.ras '288-317 and *:A"\
+			"and helix' 2C2A.cif 2C2A.png"\
+			"\n	pdbx-draw-secondary -h"\
+			"\n	pdbx-draw-secondary -v\n"\
+			"\nFOR MORE INFORMATION:"\
+			"\n	The specification of the program can be found in"\
+			"specification directory, named specification.txt"
+			exit
+		;;
+		-v | --version)
+			echo ${Id} | sed 's/^\$//;s/\$$//' 
+			echo "${VERSION}"
+			exit
+		;;
+		-*)
+			echo "$0: ERROR, unknown option used. Please check help"\
+			"information by using -h option for possible options and"\
+			"their usage." >&2
+			exit 2
+	esac 
+else
+	echo "$0: ERROR, input information provided incorrectly.\n"\
+	"There should be:\n"\
+	"[chain residue range] [input file] [output file]\n"\
+	"or:\n"\
+	"[-r option] [rotation file] [chain residue range] [input file]"\
+	"[output file]\n" \
+	"or:\n"\
+	"[-h (--help) or -v (--version) options]" >&2
+	exit 3
+fi
+
+# Error 4: checks if input file exists
+if ! [ -e "${INPUT_CIF}" ]
+then
+	echo "$0: ERROR, input file \"${INPUT_CIF}\" does not exist." \
+	"Please check if input file was provided correctly." >&2
+	exit 4
+fi
+
+# Error 5: checks if input file is readable
+if ! [ -r "${INPUT_CIF}" ]
+then
+	echo "$0: ERROR, input file \"${INPUT_CIF}\" is unreadable." \
+	"Please check if input file was provided correctly." >&2
+	exit 5
+fi
+
+# Error 6-7: checks input file formats
+SEARCH_FOR_NUMLINES=100
+case "$(file "${INPUT_CIF}")" in 
+	*ASCII*text*)
+	if ! cat "${INPUT_CIF}" | head -n ${SEARCH_FOR_NUMLINES} \
+	| grep -q '^data_'
+	then
+		echo "$0: ERROR, file \"${INPUT_CIF}\" is not PDBx/mmCIF format"\
+		"file, because first ${SEARCH_FOR_NUMLINES} lines does"\
+		"not contain 'data_'"\
+		"keyword.\nPlease provide only PDBx/mmCIF format file." >&2
+		exit 6
+	fi
+	;;
+	*)
+		echo "$0: ERROR, file \"${INPUT_CIF}\" is not an ASCII text file."\
+		"Please provide ASCII text file." >&2
+		exit 7
+		;;
+esac
+
+# Creating images using Jmol
+jmol --nodisplay --noconsole --script - "${INPUT_CIF}" \
+ > /dev/null 2> "${TMP_FILE}" <<EOF
+select "${SELECTION_STATEMENT}"
+restrict selected and mainchain
+wireframe 50
+center selected
+zoom 200
+color cpk
+calculate hbonds
+color hbonds white
+hbonds 50
+${ROTATION_STATEMENT}
+write "${OUTPUT_PNG}" as PNG
+quit
+EOF
+
+# Error 8: checks output file format
+case "$(file "${OUTPUT_PNG}")" in
+	*PNG*image*data*)
+	continue
+	;;
+	*)
+		echo "$0: ERROR, output file \"${OUTPUT_PNG}\" is not PNG format"\
+		"file."\
+		"\nJmol was not able to create PNG format."\
+		"Check if input information that was provided are correct." >&2
+		echo "$(file "${OUTPUT_PNG}")"
+		exit 8
+esac
+
+# Error 9: incorrect input commands syntax, return status non 0
+if [ -s ${TMP_FILE} ] 
+then 
+	ERROR_INFO=$(cat ${TMP_FILE})
+	echo "$0: ERROR, incorrect Jmol input commands syntax. Image"\
+	"\"${OUTPUT_PNG}\" will not be created"\
+	"\nThe mistake is either in select statement or in rotation file"\
+	"(if provided).\nPlease fix these errors:\n\"${ERROR_INFO}\" " >&2
+	rm -f "${OUTPUT_PNG}"
+	rm -f "${TMP_FILE}"
+	exit 9
+else 
+	# The file is empty, return status 0
+	rm -f "${TMP_FILE}"
+fi 
+
+
+# Error 10: Checking if output was created
+if [ ! -e ${OUTPUT_PNG} ] 
+then
+	echo "$0: ERROR, image cannot be created by Jmol. Please check your"\
+	"select statement:\"${SELECTION_STATEMENT}\", you might have"\
+	"chosen non existing atoms." >&2
+	exit 10
+fi

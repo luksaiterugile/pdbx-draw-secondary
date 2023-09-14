@@ -1,0 +1,4 @@
+Šis failas yra skirtas testavimo atvejams, kai:
+- pateikiamas ne ASCII formato failas kaip įvestis
+
+Šio failo formatas - UTF-8

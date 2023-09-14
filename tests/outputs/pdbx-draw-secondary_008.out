@@ -1,0 +1,1 @@
+./scripts/pdbx-draw-secondary: ERROR, input file "tests/data/does_not_exist.cif" does not exist. Please check if input file was provided correctly.

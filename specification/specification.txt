@@ -1,0 +1,84 @@
+Image generation from protein structures
+========================================
+
+PROGRAM
+=======
+Write a Shell script which generates PNG format image file from a 
+single protein structure PDBX/mmCIF[1] format file. 
+Program uses here-document[2] code block which redirects stdin into Jmol[3] program. 
+Program MUST:
+-- depict a specified part of the chain as wireframe model;
+-- color atoms by their chemical types;
+-- highlight the hydrogen bonds in the secondary structures.
+
+The title of the program:
+pdbx-draw-secondary
+
+Program execution:
+pdbx-draw-secondary [selection statement] [input file] [output file]
+or:
+pdbx-draw-secondary [-r option] [rotation file] [selection statement] [input file] [output file]
+or:
+pdbx-draw-secondary [-h (--help) option]
+or
+pdbx-draw-secondary [-v (--version) option]
+
+The first three position (i.e. non-option) arguments are required:
+-- the first argument is a selection statement that describes the part
+   of the chain to be displayed;
+-- the second argument is the name of the input PDBx/mmCIF file;
+-- the third argument is the name of the output PNG file.
+
+Alternatively, when rotation option is used, it MUST be provided as a first argument, 
+where second argument MUST be a rotation file. Selection statement, 
+input file and output file MUST be provided after it. 
+
+Information about options:
+-- Help options are '-h' or '--help'. Program MUST print information in stdout.
+-- Version options are '-v' or '--version'. Program MUST print Subversion[4] Id and program's version.
+-- Rotation options are '-r' or '--rotation'. This option MUST be provided together with rotation file.
+This file with rotation option determines the ultimate model orientation in the picture. 
+The orientation setting commands MUST be applied to the selected atoms 
+before they are rendered in the output picture.
+
+Program execution examples:
+pdbx-draw-secondary '288-317 and *:A and helix' 2C2A.cif 2C2A.png 
+
+pdbx-draw-secondary -r rotation.ras '288-317 and *:A and helix' 2C2A.cif 2C2A.png
+
+pdbx-draw-secondary -h
+
+pdbx-draw-secondary -v
+
+FILE FORMATS
+============
+The 'pdbx-draw-secondary' MUST accept the following files:
+-- protein atom coordinate input file: PDBx;
+-- rotation matrix format: Rasmol or Jmol commands;
+-- selection of the atoms: Rasmol or Jmol selection statement;
+-- image output format: PNG or PNM.
+
+DIAGNOSTICS
+===========
+Program MUST raise an error about the following problems:
+-- incorrect -r (--rotation) option usage;
+-- unknown option usage;
+-- incorrect number of elements in stdin;
+-- input file is unreadable;
+-- input file does not exist;
+-- input file is not PDBx/mmCIF format file;
+-- input file is not ASCII text format file;
+-- output file is not PNG format file; 
+-- incorrect input Jmol commands syntax used in selection
+statement or in rotation file;
+-- situations when the image cannot be created;
+
+Error format - error message MUST print program's name, file name if the problem was 
+caused by it, message explaining the problem and citation of the command if the problem was caused by incorrect input command syntax. 
+
+REFERENCES
+==========
+[1] wwPDB, 2014. URL: https://mmcif.wwpdb.org/ [accessed: 2022-04-01 11:05 EEST]
+[2] Here document, Wikipedia, 2022. URL:https://en.wikipedia.org/wiki/Here_document [accessed: 2022-03-28 15:22 EEST]
+[3] Jmol development team, 2016. Jmol, URL: http://jmol.sourceforge.net/. [accessed: 2022-03-08 17:15 EEST]
+[4] Apache Subversion Docummentation, URL: https://subversion.apache.org/docs/ [accessed 2022-03-28 15:58 EEST]

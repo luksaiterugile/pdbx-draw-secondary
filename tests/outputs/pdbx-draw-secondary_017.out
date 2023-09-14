@@ -1,0 +1,7 @@
+./scripts/pdbx-draw-secondary: ERROR, input information provided incorrectly.
+ There should be:
+ [chain residue range] [input file] [output file]
+ or:
+ [-r option] [rotation file] [chain residue range] [input file] [output file]
+ or:
+ [-h (--help) or -v (--version) options]

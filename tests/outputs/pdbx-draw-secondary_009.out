@@ -1,0 +1,2 @@
+./scripts/pdbx-draw-secondary: ERROR, file "tests/data/rotation.ras" is not PDBx/mmCIF format file, because first 100 lines does not contain 'data_' keyword.
+Please provide only PDBx/mmCIF format file.

@@ -1,0 +1,21 @@
+Information about domain image generation by Jmol
+
+Domain select statements and their residue chains:
+6G45 - select 2-276 and *:A
+2C2A - select 321-481 and *:A
+5A5T - select 446-770 and *:C
+2DM1 - select 8-67 and *:A
+1WGX - select 8-67 and *:A
+
+Jmol command flow which was used for all of the
+domain image generation:
+cpk off
+wireframe off
+select statement (provided above)
+restrict selected and mainchain
+cartoon
+color structure
+
+Image also rotated and zoomed (using mouse) 
+to provide best view of the protein domain. 
+Domain images were also saved using write command in Jmol.

@@ -1,0 +1,6 @@
+./scripts/pdbx-draw-secondary: ERROR, incorrect Jmol input commands syntax. Image "tests/outputs/case-image_12.png" will not be created 
+The mistake is either in select statement or in rotation file (if provided).
+Please fix these errors:
+"script compiler ERROR: ) expected
+----
+         select ((288-317 and *:A) and helix mainchain) <<<<" 
